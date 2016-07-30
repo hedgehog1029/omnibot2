@@ -3,8 +3,12 @@ ffmpeg = require "fluent-ffmpeg"
 YouTube = require "youtube-node"
 lame = require "lame"
 request = require "request"
+consumer = require "../lib/util/playlist-consumer"
 
 utils = require "util"
+
+# WINDOWS ONLY
+ffmpeg.setFfmpegPath "#{__dirname}/../ffmpeg/ffmpeg.exe"
 
 Jukebox =
 	channels: {}
@@ -16,9 +20,13 @@ Jukebox =
 class Track
 	constructor: (@title, @type, @url) ->
 
-	resolveStream: (writable) ->
+	resolveStream: (writable, conn) ->
 		if @type is "youtube"
-			ffmpeg().input(ytdl(@url)).noVideo().format("mp3").pipe writable, { end: true }
+			ffmpeg().input(ytdl(@url)).noVideo().format("mp3").on("error", (err) ->
+				console.log(err);
+
+				if err then Jukebox.playNext(conn);
+			).pipe writable, { end: true }
 		else
 			request(@url).pipe writable
 	play: (conn) ->
@@ -37,7 +45,7 @@ class Track
 
 			Jukebox.nowplaying[conn.guildId] = this
 
-		@resolveStream @decoder
+		@resolveStream @decoder, conn
 
 Jukebox.queue = (e, guild, title, type, url) ->
 	unless Jukebox._queue[guild.id]
@@ -70,9 +78,12 @@ Jukebox.join = (e, guild, cb) ->
 		cb vci.voiceConnection
 
 Jukebox.playNext = (conn) ->
+	unless Jukebox._queue[conn.guildId]
+		return
+
 	next = Jukebox._queue[conn.guildId].shift()
 
-	console.log utils.inspect(Jukebox)
+	console.log("Playing next");
 
 	if next
 		next.play conn
@@ -100,6 +111,7 @@ module.exports =
 		yt = new YouTube()
 
 		yt.setKey a.config.yt.key
+		consumer.setApiKey a.config.yt.key
 
 		a.cmd.command "jukebox"
 			.alias "play"
@@ -114,13 +126,29 @@ module.exports =
 					e.mention().reply "Set **#{vc.name}** as the music channel for this guild. I'll join when there is music to play!"
 				.bind()
 			.sub "yt"
-				.alias "sc"
+				.alias "youtube"
 				.help "Queue a song from YouTube."
-				.usage "<yt link/search>"
+				.usage "<url/search>"
 				.on (e) ->
 					if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/watch\?v=(\w*)/i
 						Jukebox.ytQueue e.args[0], e
 					else if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\w*)/
+						matches = e.args[0].match(/http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\w*)/)
+
+						console.log(matches[1]);
+
+						if matches[1] isnt null
+							consumer.consume matches[1], (videos) ->
+								e.mention().reply "Queued that playlist from YouTube. Use `omni jukebox queue` to check the queue."
+								console.log(videos);
+
+								unless Jukebox._queue[e.msg.guild.id]
+									Jukebox._queue[e.msg.guild.id] = []
+
+								videos.forEach (video) ->
+									Jukebox._queue[e.msg.guild.id].push(new Track video.title, "youtube", video.url)
+
+								Jukebox.queueUpdate e, e.msg.guild
 					else
 						yt.search e.args[0], 1, (err, result) ->
 							if err then return
