@@ -7,6 +7,7 @@ class Command
 		@_.usage = ""
 		@_.permission = null
 		@_.commands = {}
+		@_.topics = []
 		@_.callback = (e) ->
 			e.mention().reply "No callback was provided for this command."
 
@@ -54,6 +55,7 @@ class Command
 		@_.parent
 
 	_bind: (sub) ->
+		@_.topics.push(sub)
 		sub._.aliases.forEach (a) =>
 			@_.commands[a] = sub
 
@@ -65,8 +67,10 @@ class CommandManager
 	constructor: ->
 		@_ = {}
 		@_.commands = {}
+		@_.topics = []
 
 	_bind: (cmd) ->
+		@_.topics.push(cmd)
 		cmd._.aliases.forEach (a) =>
 			@_.commands[a] = cmd
 
@@ -101,6 +105,10 @@ class CommandEvent
 	mention: ->
 		@build().mention @msg.author
 
+	pm: (msg) ->
+		@msg.author.openDM().then (dm) =>
+			dm.sendMessage msg
+
 	findVoice: (pos) ->
 		name = @args[pos].toUpperCase()
 
@@ -111,11 +119,14 @@ class CommandEvent
 
 	findText: (pos) ->
 		name = @args[pos].toUpperCase()
-		
+
 		@msg.guild.textChannels.find (c) -> c.name.toUpperCase() is name
 
 	validate: (pos, reg) ->
 		new RegExp(reg).test(@args[pos])
+
+	has: (pos) ->
+		-1 < pos < @args.length
 
 	_shiftArg: ->
 		@args.shift()

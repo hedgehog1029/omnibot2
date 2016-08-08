@@ -8,7 +8,7 @@ consumer = require "../lib/util/playlist-consumer"
 utils = require "util"
 
 # WINDOWS ONLY
-ffmpeg.setFfmpegPath "#{__dirname}/../ffmpeg/ffmpeg.exe"
+#ffmpeg.setFfmpegPath "#{__dirname}/../ffmpeg/ffmpeg.exe"
 
 Jukebox =
 	channels: {}
@@ -112,6 +112,31 @@ module.exports =
 
 		yt.setKey a.config.yt.key
 		consumer.setApiKey a.config.yt.key
+
+		a.web.get "/jukebox/np", (req, res) ->
+			playing = Jukebox.nowplaying[req.guild.id]
+
+			if playing
+				res.send({
+					title: playing.title
+					type: playing.type
+					url: playing.url
+				})
+			else
+				res.send({})
+
+		a.web.get "/jukebox/queue", (req, res) ->
+			if Jukebox._queue[req.guild.id]
+				res.send({
+					queue: Jukebox._queue[req.guild.id].map (playing) ->
+						{
+							title: playing.title
+							type: playing.type
+							url: playing.url
+						}
+				})
+			else
+				res.send({ queue: [] })
 
 		a.cmd.command "jukebox"
 			.alias "play"
