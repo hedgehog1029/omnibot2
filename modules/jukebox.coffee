@@ -78,20 +78,20 @@ Jukebox.join = (e, guild, cb) ->
 		cb vci.voiceConnection
 
 Jukebox.playNext = (conn) ->
-	unless Jukebox._queue[conn.guildId]
+	gid = conn.guildId;
+
+	unless Jukebox._queue[gid]
 		return
 
-	next = Jukebox._queue[conn.guildId].shift()
-
-	console.log("Playing next");
+	next = Jukebox._queue[gid].shift()
 
 	if next
 		next.play conn
 	else
+		delete Jukebox.connections[gid];
+
 		conn.channel.leave();
 		conn.disconnect();
-
-		delete Jukebox.connections[conn.guildId];
 
 Jukebox.queueUpdate = (e, guild) ->
 	unless Jukebox._queue[guild.id]
@@ -120,7 +120,6 @@ module.exports =
 				res.send({
 					title: playing.title
 					type: playing.type
-					url: playing.url
 				})
 			else
 				res.send({})
@@ -132,7 +131,6 @@ module.exports =
 						{
 							title: playing.title
 							type: playing.type
-							url: playing.url
 						}
 				})
 			else
@@ -155,10 +153,10 @@ module.exports =
 				.help "Queue a song from YouTube."
 				.usage "<url/search>"
 				.on (e) ->
-					if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/watch\?v=(\w*)/i
+					if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/watch\?v=(\S*)/i
 						Jukebox.ytQueue e.args[0], e
-					else if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\w*)/
-						matches = e.args[0].match(/http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\w*)/)
+					else if e.validate 0, /http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\S*)/
+						matches = e.args[0].match(/http(?:s*):\/\/(?:www\.)*youtube\.com\/playlist\?list=(\S*)/)
 
 						console.log(matches[1]);
 
@@ -175,7 +173,7 @@ module.exports =
 
 								Jukebox.queueUpdate e, e.msg.guild
 					else
-						yt.search e.args[0], 1, (err, result) ->
+						yt.search e.args.join(" "), 1, (err, result) ->
 							if err then return
 
 							if result.items.length > 0
@@ -188,7 +186,25 @@ module.exports =
 				.help "Queue a song from SoundCloud"
 				.usage "<search>"
 				.on (e) ->
-					e.mention().reply "NYI"
+					params =
+						json: true
+						qs:
+							client_id: a.config.sc.key
+							q: e.args.join " "
+
+					request "http://api.soundcloud.com/tracks", params, (err, res, tracks) ->
+						if err
+							e.mention().reply "There was an unexpected error!"
+							return
+
+						if tracks.length is 0
+							e.mention().reply "No tracks found! :("
+							return
+
+						title = "#{tracks[0].title} - #{tracks[0].user.username}"
+						Jukebox.queue e, e.msg.guild, title, "url", "#{tracks[0].stream_url}?client_id=#{a.config.sc.key}"
+
+						e.mention().reply "Queued **#{title}** from SoundCloud"
 				.bind()
 			.sub "url"
 				.help "Queue a song from a URL"
@@ -215,6 +231,17 @@ module.exports =
 						e.mention().reply "Current queue:\n#{q.join "\n"}"
 					else
 						e.mention().reply "The queue is currently empty."
+				.bind()
+			.sub "clearqueue"
+				.alias "cq"
+				.help "Clear the queue for this guild."
+				.on (e) ->
+					unless Jukebox._queue[e.msg.guild.id]
+						e.mention().reply "There's no queue in this guild!"
+						return
+
+					Jukebox._queue[e.msg.guild.id] = [];
+					e.mention().reply "Cleared the queue."
 				.bind()
 			.sub "skip"
 				.help "Skip the currently-playing song."
