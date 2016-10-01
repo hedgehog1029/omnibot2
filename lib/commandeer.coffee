@@ -109,6 +109,9 @@ class CommandEvent
 		@msg.author.openDM().then (dm) =>
 			dm.sendMessage msg
 
+	file: (file, name) ->
+		@msg.channel.uploadFile(file, name)
+
 	findVoice: (pos) ->
 		name = @args[pos].toUpperCase()
 

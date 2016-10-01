@@ -1,6 +1,8 @@
 fs = require "fs"
 l = require("log4js").getLogger "modloader"
 
+modules = {}
+
 load = (e) ->
 	fs.readdir "#{__dirname}/../modules/", (err, files) ->
 		if err
@@ -27,6 +29,8 @@ load = (e) ->
 			try
 				mod.init e
 
+				modules["../modules/#{file}"] = mod
+
 				l.info "Loaded #{mod.name}."
 			catch err
 				l.error "Module #{mod.name} threw an error while initializing!"
@@ -35,5 +39,17 @@ load = (e) ->
 				if mod.exposed
 					module.exports[mod.name] = mod.exposed
 
+reload = (e) ->
+	Object.keys(modules).forEach (n) ->
+		name = require.find n
+
+		unless name
+			return
+
+		delete require.cache[require.resolve(name).id];
+
+	load(e)
+
 module.exports =
 	"load": load
+	"reload": reload

@@ -20,7 +20,20 @@ module.exports =
 			.on (e) ->
 				e.mention().reply "Click here: http://omni.offbeatwit.ch/discord/join"
 			.bind()
-		.command "test"
+		.command "roll"
+			.help "Roll dice!"
+			.usage "<number of dice>d<dice sides>"
+			.on (e) ->
+				die = e.args[0].toLowerCase().split("d").map((n) -> parseInt(n))
+
+				roll = (m) ->
+					Math.floor(Math.random() * m)
+
+				results = (roll die[1] for i in [1..die[0]])
+
+				e.mention().reply "Rolled #{die[0]}d#{die[1]}s for **`#{results.join ", "}`**"
+			.bind()
+		.command "twitchtest"
 			.help "Test twitch username"
 			.on (e) ->
 				if e.args[0]

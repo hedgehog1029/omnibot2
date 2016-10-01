@@ -210,6 +210,10 @@ module.exports =
 				.help "Queue a song from a URL"
 				.usage "<url>"
 				.on (e) ->
+					unless e.has 0
+						e.mention().reply "You need to specify a URL!"
+						return
+
 					name = e.args[0].substring e.args[0].lastIndexOf("/") + 1
 
 					Jukebox.queue e, e.msg.guild, name, "url", e.args[0]
@@ -224,11 +228,12 @@ module.exports =
 						e.mention().reply "There's no queue in this guild!"
 						return
 
-					q = Jukebox._queue[e.msg.guild.id].map (track, i) ->
+					jq = Jukebox._queue[e.msg.guild.id]
+					q = jq.slice(0, 10).map (track, i) ->
 						"**#{i + 1}. #{track.title}**"
 
 					unless q.length is 0
-						e.mention().reply "Current queue:\n#{q.join "\n"}"
+						e.mention().reply "Current queue (#{jq.length} songs):\n#{q.join "\n"}"
 					else
 						e.mention().reply "The queue is currently empty."
 				.bind()
