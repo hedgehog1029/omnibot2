@@ -16,7 +16,7 @@ module.exports =
 				if e.has 0
 					e.build().reply "Grabbing a random image from **/r/#{e.args[0]}**..."
 
-					reddit.get "/r/#{e.args[0]}/random", { qs: { raw_json: 1 } }, (err, st, res) ->
+					reddit.get "/r/#{e.args[0]}/random", { qs: { raw_json: 1 }, json: true }, (err, st, res) ->
 						post = res[0].data.children[0].data
 
 						if post.preview
