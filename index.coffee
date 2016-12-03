@@ -16,6 +16,7 @@ eObj =
 	bot: bot
 	config: conf
 	web: webserver.api
+	loader: loader
 
 webserver.app.get "/discord/join/:gid", (req, res) ->
 	res.redirect("https://discordapp.com/oauth2/authorize?&client_id=174913532444278784&scope=bot&guild_id=" + req.params.gid)

@@ -120,6 +120,7 @@ module.exports =
 				res.send({
 					title: playing.title
 					type: playing.type
+					channel: Jukebox.channels[req.guild.id]
 				})
 			else
 				res.send({})

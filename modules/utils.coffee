@@ -27,9 +27,9 @@ module.exports =
 				die = e.args[0].toLowerCase().split("d").map((n) -> parseInt(n))
 
 				roll = (m) ->
-					Math.floor(Math.random() * m)
+					Math.floor(Math.random() * m) + 1
 
-				results = (roll die[1] for i in [1..die[0]])
+				results = (roll die[1] for [1..die[0]])
 
 				e.mention().reply "Rolled #{die[0]}d#{die[1]}s for **`#{results.join ", "}`**"
 			.bind()
