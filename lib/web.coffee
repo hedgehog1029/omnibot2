@@ -2,11 +2,11 @@ express = require "express"
 jwt = require "jsonwebtoken"
 request = require "request"
 
-secret = "elephants dancing manically around a pole"
 client_id = "174913532444278784"
 
-module.exports = (bot) ->
+module.exports = (bot, conf) ->
 	app = express()
+	secret = conf.web.secret
 	api = express.Router({ mergeParams: true })
 
 	app.use(express.static(__dirname + "/public"))
