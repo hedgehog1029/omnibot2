@@ -113,7 +113,7 @@ class CommandEvent
 		@msg.channel.uploadFile(file, name)
 
 	findVoice: (pos) ->
-		name = @args[pos].toUpperCase()
+		name = if pos then @args[pos].toUpperCase() else @args.toUpperCase()
 
 		if name is "$VC"
 			@msg.member.getVoiceChannel()

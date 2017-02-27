@@ -144,7 +144,7 @@ module.exports =
 				.help "Join a voice channel."
 				.usage "<voice channel>"
 				.on (e) ->
-					vc = e.findVoice 0
+					vc = e.findVoice()
 					Jukebox.channels[e.msg.guild.id] = vc
 
 					e.mention().reply "Set **#{vc.name}** as the music channel for this guild. I'll join when there is music to play!"

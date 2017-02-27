@@ -8,7 +8,7 @@ commandeer = require "./lib/commandeer"
 
 conf = Hjson.parse fs.readFileSync(__dirname + "/config/config.hjson", "utf8")
 l = log.getLogger "core"
-bot = new discordie
+bot = new discordie autoReconnect: true
 webserver = require("./lib/web") bot, conf
 
 eObj =
