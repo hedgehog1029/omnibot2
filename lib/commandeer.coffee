@@ -96,6 +96,10 @@ class MessageBuilder
 	reply: (str) ->
 		@msg.channel.sendMessage "#{@prefix} #{str}".trim()
 
+	embed: (obj) ->
+		@msg.channel.sendMessage("", false, obj).catch (err) ->
+			console.dir err
+
 class CommandEvent
 	constructor: (@msg, @bot, @args) ->
 
