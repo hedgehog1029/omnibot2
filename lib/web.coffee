@@ -35,6 +35,7 @@ module.exports = (bot, conf) ->
 				grant_type: "authorization_code"
 				code: code
 				client_id: client_id
+				client_secret: conf.web.oauth_secret
 				redirect_uri: "http://omni.offbeatwit.ch/discord/hippopotamus"
 			}
 			json: true
