@@ -4,9 +4,11 @@
   "description": "A Discord bot, with music, memes, and more!",
   "main": "index.js",
   "dependencies": {
-    "discordie": "^0.7.2",
+    "discordie": "^0.10.0",
+    "express": "^4.14.1",
     "fluent-ffmpeg": "^2.1.0",
     "hjson": "^1.8.4",
+    "jsonwebtoken": "^7.3.0",
     "lame": "^1.2.4",
     "log4js": "^0.6.37",
     "request": "^2.72.0",
